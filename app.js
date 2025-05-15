@@ -13,6 +13,7 @@ const usersRouter = require("./route/users");
 const cartsRouter = require("./route/carts");
 const ordersRouter = require("./route/orders");
 const likesRouter = require("./route/likes");
+const categoryRouter = require("./route/category");
 
 // 미들웨어
 app.use(express.json());
@@ -23,3 +24,4 @@ app.use("/users", usersRouter);
 app.use("/carts", cartsRouter);
 app.use("/orders", ordersRouter);
 app.use("/likes", likesRouter);
+app.use("/categories", categoryRouter);
