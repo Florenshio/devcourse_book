@@ -2,8 +2,9 @@ const { StatusCodes } = require("http-status-codes");
 const connection = require("../mariadb");
 
 const getAllCategories = (req, res) => {
-    const sql = "SELECT * FROM categories";
-    const value = [];
+
+    let sql = "SELECT * FROM categories";
+    let value = [];
 
     connection.query(sql, value, (err, result) => {
         if (err) {
@@ -21,6 +22,8 @@ const getAllCategories = (req, res) => {
         }
     })
 }
+
+
 
 module.exports = {
     getAllCategories
