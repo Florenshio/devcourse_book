@@ -4,7 +4,7 @@ const connection = require("../mariadb");
 const getAllBooks = (req, res) => {
     const { category_id, is_new, limit, current_page } = req.query;
 
-    let sql = "SELECT * FROM books";
+    let sql = "SELECT *, (SELECT count(*) FROM likes WHERE liked_books_id = books.id) AS likes FROM books";
     let value = [];
     let offset = (current_page - 1) * limit;
 
@@ -39,10 +39,14 @@ const getAllBooks = (req, res) => {
     }
 
 const getBookById = (req, res) => {
+    const { user_id } = req.body;
     const book_id = req.params.book_id;
 
-    const sql = `SELECT * FROM books LEFT JOIN category ON books.category_id = category.id WHERE books.id = ?`;
-    const value = [book_id];
+    const sql = `SELECT *, 
+                (SELECT count(*) FROM likes WHERE liked_books_id = books.id) AS likes,
+                (SELECT EXISTS(SELECT * FROM likes WHERE user_id = ? AND liked_books_id = ?)) AS liked 
+                FROM books LEFT JOIN category ON books.category_id = category.id WHERE books.id = ?`;
+    const value = [user_id, book_id, book_id];
 
     connection.query(sql, value, (err, result) => {
         if (err) {
