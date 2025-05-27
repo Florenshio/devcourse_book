@@ -10,7 +10,7 @@ router.get("/", getCart);
 
 
 // 장바구니 도서 삭제
-router.delete("/:book_id", deleteBookFromCart)
+router.delete("/:cartItem_id", deleteBookFromCart)
 
 
 module.exports = router;

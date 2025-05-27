@@ -1,7 +1,8 @@
 const { StatusCodes } = require("http-status-codes");
-// const connection = require("../mariadb");
 const mariadb = require("mysql2/promise");
 const connection = require("../mariadb");
+const { ensureAuthorization } = require("../auth");
+const jwt = require("jsonwebtoken");
 
 const order = async (req, res) => {
 
@@ -14,6 +15,13 @@ const order = async (req, res) => {
             dateStrings: true
         });
 
+    let user_id = ensureAuthorization(req, res);
+    
+    if (user_id instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({ message: "로그인 세션이 만료되었습니다." });
+    } else if (user_id instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
+    }
 
     const { items, delivery, totalQuantity, totalPrice, userId, firstBookTitle } = req.body;
 
@@ -30,7 +38,7 @@ const order = async (req, res) => {
 
     // orders 테이블 삽입
     sql = "INSERT INTO orders (book_title, total_quantity, total_price, user_id, delivery_id) VALUES (?, ?, ?, ?, ?)";
-    values = [firstBookTitle, totalQuantity, totalPrice, userId, delivery_id];
+    values = [firstBookTitle, totalQuantity, totalPrice, user_id, delivery_id];
     [results] = await connection.execute(sql, values);
     order_id = result.insertId;
 
@@ -67,6 +75,14 @@ const getOrders = async (req, res) => {
         dateStrings: true
     });
 
+    let user_id = ensureAuthorization(req, res);
+    
+    if (user_id instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({ message: "로그인 세션이 만료되었습니다." });
+    } else if (user_id instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
+    }
+
     let sql = `SELECT orders.id, created_at, address, receiver, cantact, book_title, total_quantity, total_price 
             FROM orders LEFT JOIN delivery
             ON orders.delivery_id = delivery.id`;
@@ -86,6 +102,14 @@ const getOrderDetail = async (req, res) => {
         database: "Book",
         dateStrings: true
     });
+
+    let user_id = ensureAuthorization(req, res);
+    
+    if (user_id instanceof jwt.TokenExpiredError) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({ message: "로그인 세션이 만료되었습니다." });
+    } else if (user_id instanceof jwt.JsonWebTokenError) {
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: "잘못된 토큰입니다." });
+    }
 
     let sql = `SELECT book_id, title, author, price, quantity
             FROM orderdBook LEFT JOIN books

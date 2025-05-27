@@ -18,9 +18,12 @@ const join = (req, res) => {
             console.error(err);
             return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "서버 오류" });
         
+        }
+        
+        if (result.affectedRows) {
+            return res.status(StatusCodes.CREATED).json({ message: "회원가입 성공" });
         } else {
-
-            return res.status(StatusCodes.OK).json({ message: "회원가입 성공" });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: "회원가입 실패" });
         }
     })
 }
@@ -31,15 +34,6 @@ const login = (req, res) => {
     const sql = "SELECT * FROM users WHERE email = ?";
     const value = [email];
     const userPassword = password;
-
-    const token = jwt.sign(
-        { "email": email }, 
-        process.env.JWT_SECRET, 
-        { expiresIn: "1h", 
-            algorithm: "HS256",
-            issuer: "florenshio",
-            subject: "user"
-        });
     
     connection.query(sql, value, (err, result) => {
         if (err) {
@@ -52,6 +46,17 @@ const login = (req, res) => {
                 const hashedPasswordFromUser = crypto.pbkdf2Sync(userPassword, salt, 10000, 64, "sha512").toString("base64");
 
                 if (hashedPasswordFromUser === password) {
+                    
+                    const token = jwt.sign(
+                        { "email": email,
+                            "id": result[0].id
+                         }, 
+                        process.env.JWT_SECRET, 
+                        { expiresIn: "1h", 
+                            algorithm: "HS256",
+                            issuer: "florenshio",
+                            subject: "user"
+                        });
                     
                     res.cookie("token", token);
                     return res.status(StatusCodes.OK).json({ message: "로그인 성공" });
